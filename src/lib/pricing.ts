@@ -1,0 +1,5 @@
+'use client';
+import { db } from './db';
+export type PriceMap = Record<string, number>;
+export function parseSymbolPriceCsv(csv: string): PriceMap { const lines = csv.trim().split(/\r?\n/); if(!lines.length) return {}; const header = lines[0].split(',').map(s=>s.trim().toLowerCase()); const si = header.findIndex(h=>h==='symbol'||h==='ticker'); const pi = header.findIndex(h=>h==='price'||h==='close'||h==='last'); const map: PriceMap={}; for(let i=1;i<lines.length;i++){ const cols=lines[i].split(','); const sym=(cols[si]||'').trim(); const p=Number((cols[pi]||'').trim()); if(sym && isFinite(p)) map[sym]=p; } return map; }
+export async function fetchPricesFromSheet(): Promise<PriceMap>{ const s=await db.settings.get('singleton'); const url=s?.priceCSVUrl; if(!url) return {}; const res=await fetch('/api/proxy?src='+encodeURIComponent(url),{cache:'no-store'}); if(!res.ok) return {}; const text=await res.text(); return parseSymbolPriceCsv(text); }

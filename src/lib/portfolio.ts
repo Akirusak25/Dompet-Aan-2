@@ -1,0 +1,6 @@
+'use client';
+import { db, uid } from './db'; import { parseSymbolPriceCsv } from './pricing';
+export async function computeCurrentEquity(): Promise<number>{ const s=await db.settings.get('singleton'); const init=s?.initialCash||0; const trades=await db.journal.orderBy('date').toArray(); let cash=init; for(const t of trades){ if(t.side==='buy') cash-= t.entry*t.qty + (t.fee||0); else cash+= (t.exitPrice??t.entry)*t.qty - (t.fee||0); }
+  let mtm=0; const priceUrl=s?.priceCSVUrl; if(priceUrl){ const res=await fetch('/api/proxy?src='+encodeURIComponent(priceUrl)); if(res.ok){ const prices=parseSymbolPriceCsv(await res.text()); const pos:Record<string,{qty:number,avg:number}>={}; for(const t of trades){ const p=pos[t.symbol]||{qty:0,avg:0}; if(t.side==='buy'){ const total=p.avg*p.qty + t.entry*t.qty + (t.fee||0); p.qty+=t.qty; p.avg=p.qty?Math.round(total/p.qty):0; } else { p.qty=Math.max(0,p.qty - t.qty); } pos[t.symbol]=p; } for(const sym of Object.keys(pos)){ const last=prices[sym]; if(typeof last==='number') mtm += pos[sym].qty * last; } } } return Math.round(cash + mtm); }
+export async function recordTodayEquity(){ const today=new Date().toISOString().slice(0,10); const eq=await computeCurrentEquity(); await db.equity.put({ id: uid(), date: today, equity: eq }); }
+export async function listEquitySeries(){ return db.equity.orderBy('date').toArray(); }

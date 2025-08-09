@@ -1,0 +1,1 @@
+'use client';import TradingJournal from '../../components/TradingJournal';export default function Page(){return(<main className="grid gap-4"><h1 className="text-2xl font-semibold">Jurnal Trading</h1><TradingJournal/></main>);}

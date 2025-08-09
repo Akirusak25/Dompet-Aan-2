@@ -1,0 +1,2 @@
+import { NextRequest, NextResponse } from 'next/server';
+export async function GET(req: NextRequest){const u=new URL(req.url);const src=u.searchParams.get('src');if(!src)return new NextResponse('missing src',{status:400});try{const r=await fetch(src,{cache:'no-store'});const t=await r.text();return new NextResponse(t,{status:200,headers:{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'no-store','Access-Control-Allow-Origin':'*'}});}catch(e){return new NextResponse('fetch error',{status:502});}}

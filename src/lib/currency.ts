@@ -1,0 +1,6 @@
+'use client';import { db } from './db';
+const ZERO = new Set(['IDR','JPY','KRW']);
+export function formatMoney(n:number, c:string, loc='id-ID'){ const d=ZERO.has(c)?0:2; return new Intl.NumberFormat(loc,{style:'currency',currency:c,maximumFractionDigits:d}).format(n/Math.pow(10,d)); }
+export async function getLatestRate(f:string,t:string){ if(f===t) return 1; const all=await db.fxRates.orderBy('date').reverse().toArray(); const hit=all.find(r=>r.from===f&&r.to===t); if(hit) return hit.rate; const inv=all.find(r=>r.from===t&&r.to===f); if(inv) return 1/inv.rate; return 1; }
+export async function toBase(n:number,c:string,base:string){ const r=await getLatestRate(c,base); return { baseAmount: Math.round(n*r), rate:r }; }
+export function parseMoneyInput(raw:string,c:string){ let s=(raw||'').trim().toLowerCase().replace(/[,\s]+/g,''); const mult=s.endsWith('k')?1_000:(s.endsWith('m')?1_000_000:1); if(mult>1) s=s.slice(0,-1); const x=Number(s.replace(/[^0-9.]/g,''))*mult; if(!isFinite(x)) return 0; const d=ZERO.has(c)?0:2; return Math.round(x*Math.pow(10,d)); }

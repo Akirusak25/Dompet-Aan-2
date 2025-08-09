@@ -1,0 +1,1 @@
+'use client';import PortfolioChart from '../../components/PortfolioChart';export default function Page(){return(<main className="grid gap-4"><h1 className="text-2xl font-semibold">Pertumbuhan Portofolio vs IHSG</h1><PortfolioChart/></main>);}
