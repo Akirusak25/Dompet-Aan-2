@@ -1,0 +1,32 @@
+name: Unpack ZIP
+on:
+  push:
+    paths:
+      - 'dompet-aan-latest.zip'
+      - '.github/workflows/unpack.yml'
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Unzip
+        run: |
+          sudo apt-get update && sudo apt-get install -y unzip
+          unzip -o dompet-aan-latest.zip
+          rm -f dompet-aan-latest.zip
+          if [ -d "dompet-aan" ]; then
+            shopt -s dotglob
+            mv dompet-aan/* .
+            rmdir dompet-aan
+          fi
+      - name: Commit & push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Unpack zip via workflow" || echo "No changes"
+          git push origin HEAD:${{ github.ref_name }}
